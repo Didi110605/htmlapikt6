@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>кт6</title>
+</head>
+<body>
+  <h1>История браузера</h1>
+  <button id="backButton">Назад</button>
+  <button id="forwardButton">Вперед</button>
+
+  <h1>Графика и анимация</h1>
+  <canvas id="canvas" width="400" height="400" style="border: 1px solid black;"></canvas>
+
+  <h1>Веб-воркер</h1>
+  <div>
+    <input id="inputNumber" type="number" placeholder="Введите число (например, 1000000)" />
+    <button id="startWorker">Начать вычисления</button>
+    <div id="output">Результат отобразится здесь</div>
+  </div>
+
+  <script>
+
+    document.getElementById('backButton').addEventListener('click', () => history.back());
+    document.getElementById('forwardButton').addEventListener('click', () => history.forward());
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let heartX = 50, heartY = 50, dx = 2, dy = 2;
+const heartSize = 20; 
+
+function drawHeart(x, y, size = heartSize) {
+  const scale = size / 50; 
+  
+  ctx.save();
+  ctx.translate(x, y); 
+  ctx.scale(scale, scale); 
+  ctx.beginPath();
+  
+  ctx.moveTo(0, -30);
+  ctx.bezierCurveTo(-25, -50, -50, -15, 0, 20);
+  ctx.bezierCurveTo(50, -15, 25, -50, 0, -30);
+  
+  ctx.closePath();
+  ctx.fillStyle = 'red'; 
+  ctx.fill();
+  ctx.restore();
+}
+
+function animateHeart() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height); 
+
+  drawHeart(heartX, heartY);
+
+  heartX += dx;
+  heartY += dy;
+
+  if (heartX + heartSize > canvas.width || heartX - heartSize < 0) dx = -dx;
+  if (heartY + heartSize > canvas.height || heartY - heartSize < 0) dy = -dy;
+
+  requestAnimationFrame(animateHeart); 
+}
+
+animateHeart();
+
+    if (window.Worker) {
+      const worker = new Worker(URL.createObjectURL(new Blob([`
+        self.onmessage = function(e) {
+          const num = e.data;
+          let sum = 0;
+          for (let i = 0; i < num; i++) {
+            sum += i;
+          }
+          self.postMessage(sum);
+        };
+      `], { type: 'text/javascript' })));
+
+      document.getElementById('startWorker').addEventListener('click', () => {
+        const inputNumber = document.getElementById('inputNumber').value;
+
+        if (!inputNumber || inputNumber <= 0) {
+          document.getElementById('output').innerText = "Введите корректное положительное число";
+          return;
+        }
+
+        document.getElementById('output').innerText = "Вычисления выполняются...";
+        worker.postMessage(inputNumber); 
+
+        worker.onmessage = function(event) {
+          document.getElementById('output').innerText = `Результат: ${event.data}`;
+        };
+
+        worker.onerror = function(error) {
+          document.getElementById('output').innerText = `Ошибка: ${error.message}`;
+        };
+      });
+    } else {
+      document.getElementById('output').innerText = "Веб-воркеры не поддерживаются на этом устройстве.";
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f9f9f9;
+    }
+  
+    h1 {
+      color: #444;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+  
+    button {
+      background-color: #ff5900;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+  
+    button:hover {
+      background-color: #0056b3;
+    }
+  
+    input[type="number"] {
+      padding: 8px;
+      width: calc(100% - 30px);
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+</style>
+</body>
+</html>
